@@ -67,24 +67,20 @@ func RemoteTorrentToMagnet(torrentUrl string) (string, error) {
 		// 确保程序结束时删除临时文件
 		defer os.Remove(file.Name())
 		//将文件保存到临时文件
-		wlen, err := io.Copy(file, resp.Body)
+		_, err = io.Copy(file, resp.Body)
 		if err != nil {
 			return "", err
 		}
-		//等待文件下载完毕
-		for {
-			if resp.ContentLength == wlen {
-				//从临时文件读取
-				tfile, err := os.Open(file.Name())
-				if err != nil {
-					return "", err
-				}
-				defer tfile.Close()
-				// body, err := ioutil.ReadAll(resp.Body)
-				magnetLink, err = GetMagnetLinkFromTReader(tfile)
-				break
-			}
+		//sleep 100 millisecond for copy finished!
+		time.Sleep(100 * time.Millisecond)
+		//从临时文件读取
+		tfile, err := os.Open(file.Name())
+		if err != nil {
+			return "", err
 		}
+		defer tfile.Close()
+		// body, err := ioutil.ReadAll(resp.Body)
+		magnetLink, err = GetMagnetLinkFromTReader(tfile)
 
 	} else {
 		err=errors.New(fmt.Sprintf("http request fail, Code:%d, Msg: %s", resp.StatusCode, resp.Status))
